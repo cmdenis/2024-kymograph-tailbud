@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="icon" href="img/icon.png" />
+    <script
+      type="text/javascript"
+      async
+      src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/9.3.2/math.js"></script>
+    <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/katex@0.10.0-rc.1/dist/katex.min.css"
+      integrity="sha384-D+9gmBxUQogRLqvARvNLmA9hS2x//eK1FhVb9PiU86gmcrBrJAQT8okdJ4LMp2uv"
+      crossorigin="anonymous" />
+
+    <!-- The loading of KaTeX is deferred to speed up page rendering -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/katex@0.10.0-rc.1/dist/katex.min.js"
+      integrity="sha384-483A6DwYfKeDa0Q52fJmxFXkcPCFfnXMoXblOkJ4JcA8zATN6Tm78UNL72AKk+0O"
+      crossorigin="anonymous"></script>
+
+    <!-- To automatically render math in text elements, include the auto-render extension: -->
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/katex@0.10.0-rc.1/dist/contrib/auto-render.min.js"
+      integrity="sha384-yACMu8JWxKzSp/C1YV86pzGiQ/l1YUfE8oPuahJQxzehAjEt2GiQuy/BIvl9KyeF"
+      crossorigin="anonymous"
+      onload="renderMathInElement(document.body);"></script>
+    <title>Neighbor-to-neighbor coupling</title>
+  </head>
+  <body>
+    <section>
+      <h1>Kymographs</h1>
+
+      On this page, I present some interactive kymographs for the entrainment of
+      the mouse PSM tailbud.
+    </section>
+    <section>
+      <div>
+        <div>
+          <input
+            type="range"
+            min="0.0"
+            value="2"
+            max="10"
+            class="slider"
+            oninput="this.nextElementSibling.value = 'k = ' +this.value; couplingStrength = this.value"
+            step="0.1" />
+          <output>k = 2</output>
+        </div>
+
+        <div>
+          <input
+            type="range"
+            min="0.0"
+            value="10"
+            max="15"
+            class="slider"
+            id="sliderMeanFrequency"
+            oninput="
+              this.nextElementSibling.value = 'E(ω) = ' + this.value; 
+              meanFrequency = this.value
+              "
+            step="0.1" />
+          <output> E(ω) = 10</output>
+        </div>
+
+        <div>
+          <input
+            type="range"
+            min="0.0"
+            value="0.5"
+            max="5"
+            class="slider"
+            id="sliderRangeFrequency"
+            oninput="this.nextElementSibling.value = 'σ =  ' +this.value; rangeFrequency = this.value"
+            step="0.01" />
+          <output> σ = 0.5</output>
+        </div>
+        <div>
+          <input
+            type="range"
+            min="0.0"
+            value="0.0"
+            max="80"
+            class="slider"
+            oninput="this.nextElementSibling.value = 'Noise =  ' + this.value; noiseAmount = this.value"
+            step="0.01" />
+          <output> Noise = 0.00</output>
+        </div>
+
+        <div>
+          <input
+            type="range"
+            min="0.0"
+            value="0.3"
+            max="1"
+            class="slider"
+            oninput="this.nextElementSibling.value = 'Phases range =  ' + this.value; rangePhases = this.value"
+            step="0.01" />
+          <output> Phases range = 0.30</output>
+        </div>
+
+        <div>
+          <input
+            type="range"
+            min="50"
+            value="50"
+            max="200"
+            class="slider"
+            id="sliderSizeX"
+            oninput="this.nextElementSibling.value = 'size: ' +this.value; xl = this.value; yl = this.value"
+            step="5" />
+          <output>size = 50</output>
+        </div>
+
+        <div style="padding-bottom: 10px; padding-top: 5px">
+          <select
+            id="model-selector"
+            onchange="selectCouplingFunction(this.value)">
+            <option value="rectified">
+              Coupling function: max(0, sin(ΔΦ))
+            </option>
+            <option value="sine">Coupling function: sin(ΔΦ)</option>
+            <option value="cosine">Coupling function: cos(ΔΦ)</option>
+            <option value="1">Coupling function: 1</option>
+          </select>
+        </div>
+
+        <button type="button" id="resetButtonID" onclick="loop_on = false">
+          Reset
+        </button>
+
+        <button
+          type="button"
+          id="pauseButton"
+          onclick="
+          changeLabel()
+            if (loopPause == false) {
+              this.innerHTML = 'Resume'
+              loopPause = true;
+            } else {
+              this.innerHTML = 'Pause'
+              loopPause = false
+
+            }
+        ">
+          Pause
+        </button>
+      </div>
+    </section>
+
+    <div class="heatmapsPlots">
+      <div id="kymoHeatmap">
+        <!-- Plotly chart will be drawn inside this DIV -->
+      </div>
+      <div id="xVarHeatmap">
+        <!-- Plotly chart will be drawn inside this DIV -->
+      </div>
+    </div>
+
+    <div>
+      <p>test</p>
+    </div>
+
+    <script>
+      function changeLabel() {
+        const button = document.getElementById("pauseButton");
+        button.innerHTML = "Button Clicked!";
+      }
+    </script>
+    <script src="app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,28 @@
+html, body { 
+    width: 95%; 
+    max-width: 1000px;
+    height: 100%; 
+    margin: auto; 
+    padding: 0; 
+    font-family:'Helvetica', 'Arial', 'Sans-Serif';
+    
+  } 
+
+p {
+  text-align: justify;
+  line-height: 120%;
+}
+
+a {
+  text-decoration: none;
+  color: rgb(249, 168, 81);
+}
+a:hover {
+  text-decoration: underline;
+}
+
+.heatmapsPlots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 50%;
+}
