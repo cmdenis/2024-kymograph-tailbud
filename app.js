@@ -38,7 +38,6 @@ function roll1(array, shift) {
 // testing to delete
 //var mat = math.random([2, 5])
 //console.log(mat)
-
 //console.log(roll1(mat, 1))
 
 function fCoupling(x, freq) {
@@ -46,7 +45,7 @@ function fCoupling(x, freq) {
     return Math.atan(cParam*(1-x))/cParam + x
 }
 
-function fCouplingMatrix(mat1, mat2) {
+function fCouplingMatrix(mat1, matfreq) {
     // Function for the coupling function between the memory variable and the phase variable
     //console.log("mat1 is:", mat1)
     //console.log("mat2 is:", mat2)
@@ -56,13 +55,13 @@ function fCouplingMatrix(mat1, mat2) {
             math.atan(
                 math.multiply(
                     math.subtract(
-                        mat2,
+                        matfreq,
                         mat1
                     ),
                     cParam
                 )
             ),
-            cParam
+            1/cParam
         ),
         mat1
     )
@@ -94,8 +93,6 @@ function selectCouplingFunction(choice) {
     
 }
 
-
-
 function dphidt(mat1, mat2) {
 
     // Term for intrinsic frequency
@@ -103,6 +100,11 @@ function dphidt(mat1, mat2) {
         fCouplingMatrix(mat2, stableFrequencies),
         2*Math.PI
     )
+
+    //console.log("mat1 is: ", mat1)
+    //console.log("mat2 is: ", mat2)
+    //console.log("stableFrequencies is: ", stableFrequencies)
+    //console.log("intrinsicFrequency is: ", intrinsicFrequency)
 
 
     // Term with all the neighbor interactions
@@ -128,7 +130,7 @@ function dphidt(mat1, mat2) {
         couplingStrength
     )
 
-    //console.log(couplingTerm)
+    //console.log("coupling term is:", couplingTerm)
     //console.log(math.add(intrinsicFrequency, couplingTerm))
 
     // Add everything and return output
@@ -177,7 +179,7 @@ function drawPlots(mat1, mat2){
     }
     
 
-
+    // x variable
     {
         var data = [
             {
@@ -187,8 +189,8 @@ function drawPlots(mat1, mat2){
                 colorbar: {
                     title: "x"
                 },
-                zmin: 0,
-                zmax: 2
+                zmin: 0.5,
+                zmax: 1.4
             }
           ];
     
@@ -208,7 +210,7 @@ function drawPlots(mat1, mat2){
 
 
 // Initialize matrix
-var xl = 100
+var xl = 200
 var yl = 5
 var meanFrequency = 10
 var rangeFrequency = 0.5
@@ -220,12 +222,38 @@ var stableFrequencies = math.add(
     math.map(
         math.random([xl, yl]),
         function(x){
+            return boxMuller(x, 0.5, 0)
+        }
+    )
+)
+
+// initialize phase gradient
+var maxFreq = 1.2
+var minFreq = 0.8
+var frequencyGradient = Array(xl).fill(1).map((i, j) => j/(xl-1)*(minFreq - maxFreq) + maxFreq)
+var stableFrequencies = [frequencyGradient]
+
+
+
+for (let i = 1; i < yl; i++) {
+    stableFrequencies = math.concat(stableFrequencies, [frequencyGradient], 0)
+}
+
+stableFrequencies = math.transpose(stableFrequencies)
+stableFrequencies = math.add(
+    stableFrequencies, 
+    math.map(
+        math.random([xl, yl]),
+        function(x){
             return boxMuller(x, 0.1, 0)
         }
     )
 )
 
-console.log(stableFrequencies)
+
+
+
+
 var couplingStrength = 1
 var waitingTime = 1
 var loop_on = true
@@ -233,9 +261,14 @@ var loopPause = false
 var rangePhases = 0.3
 var noiseAmount = 0.0
 var cParam = 8
-var dt = 0.015
+var dt = 0.01
 var alphaParam = 1.
 selectCouplingFunction("sine")
+
+
+var kymoGraph = [math.transpose(phasesMatrix)[2]]
+
+//console.log(kymoGraph)
 
 
 
@@ -264,15 +297,19 @@ async function main(){
             //var config = {responsive: true}
             //Plotly.react("mainSim", data, layout, config);
 
-            drawPlots(phasesMatrix, xMatrix)
+            //drawPlots(phasesMatrix, xMatrix)
+            drawPlots(math.transpose(kymoGraph), xMatrix)
 
     
 
             //console.log("phasesMatrix is:", phasesMatrix)
             dphi = dphidt(phasesMatrix, xMatrix)
-            console.log(dphi)
+            //console.log(dphi)
             phasesMatrix = math.add(phasesMatrix, math.multiply(dphi, dt))
             xMatrix = math.add(xMatrix, math.multiply(dxdt(dphi, xMatrix), dt))
+
+            kymoGraph = math.concat(kymoGraph, [math.transpose(phasesMatrix)[2]], 0)
+            //console.log(kymoGraph)
 
 
             
