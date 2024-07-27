@@ -22,9 +22,37 @@ function roll0(array, shift) {
     return result;
 }
 
+function roll_up(array) {
+    const result = math.transpose(array.slice(0))
+    result.splice(result.length-1)
+    return math.transpose(math.concat([result[0]], result, 0))
+
+}
+
+function roll_down(array) {
+    const result = math.transpose(array.slice(0))
+    result.splice(0, 1)
+    return math.transpose(math.concat(result, [result[result.length - 1]], 0))
+
+}
+
+function roll_left(array) {
+    const result = array.slice(0)
+    result.splice(result.length-1)
+    return math.concat([result[0]], result, 0)
+
+}
+
+function roll_right(array) {
+    const result = array.slice(0)
+    result.splice(0, 1)
+    return math.concat(result, [result[result.length - 1]], 0)
+
+}
+
+
 function roll1(array, shift) {
     // Function similar to numpy roll, will rotate the array along dimension 1
-    // Will cause a bug if matrix is not square!
     const length = array[1].length;
     const result = new Array(length);
   
@@ -47,9 +75,6 @@ function fCoupling(x, freq) {
 
 function fCouplingMatrix(mat1, matfreq) {
     // Function for the coupling function between the memory variable and the phase variable
-    //console.log("mat1 is:", mat1)
-    //console.log("mat2 is:", mat2)
-    
     return math.add(
         math.multiply(
             math.atan(
@@ -93,7 +118,7 @@ function selectCouplingFunction(choice) {
     
 }
 
-function dphidt(mat1, mat2) {
+function dphidt(mat1, mat2, stableFrequencies, time) {
 
     // Term for intrinsic frequency
     var intrinsicFrequency = math.multiply(
@@ -101,40 +126,40 @@ function dphidt(mat1, mat2) {
         2*Math.PI
     )
 
-    //console.log("mat1 is: ", mat1)
-    //console.log("mat2 is: ", mat2)
-    //console.log("stableFrequencies is: ", stableFrequencies)
-    //console.log("intrinsicFrequency is: ", intrinsicFrequency)
-
 
     // Term with all the neighbor interactions
     var couplingTerm = math.multiply(
         math.add(
             math.map(
-                math.subtract(roll0(mat1, 1), mat1),
+                math.subtract(roll_up(mat1), mat1),
                 nearestNeighborCoupling
             ),
             math.map(
-                math.subtract(roll0(mat1, -1), mat1),
+                math.subtract(roll_down(mat1), mat1),
                 nearestNeighborCoupling
             ),
             math.map(
-                math.subtract(roll1(mat1, 1), mat1),
+                math.subtract(roll_left(mat1), mat1),
                 nearestNeighborCoupling
             ),
             math.map(
-                math.subtract(roll1(mat1, -1), mat1),
+                math.subtract(roll_right(mat1), mat1),
                 nearestNeighborCoupling
             )
         ),
         couplingStrength
     )
 
-    //console.log("coupling term is:", couplingTerm)
-    //console.log(math.add(intrinsicFrequency, couplingTerm))
+    var entrainmentTerm = math.multiply(
+        math.sin(
+            math.add(mat1, -time*pulseFrequency)
+        ),
+        pulseStrength
+    )
+
 
     // Add everything and return output
-    return math.add(intrinsicFrequency, couplingTerm)
+    return math.add(intrinsicFrequency, couplingTerm, entrainmentTerm)
 }
 
 function dxdt(dmat1, mat2) {
@@ -149,7 +174,6 @@ function dxdt(dmat1, mat2) {
         alphaParam
     )
 }
-
 
 function drawPlots(mat1, mat2){
     // Function to draw the heatmaps
@@ -169,9 +193,15 @@ function drawPlots(mat1, mat2){
     
         var layout = {
             uirevision:'true',
-            xaxis: {title: "x"}, 
+            xaxis: {title: "time"}, 
             yaxis: {title: "y"},
             //zmin: 0,
+            margin: {
+                t: 20,
+                b: 40,
+                l: 60,
+                r: 50,
+              }
         };
     
         var config = {responsive: true}
@@ -185,20 +215,26 @@ function drawPlots(mat1, mat2){
             {
                 z: mat2,
                 type: "heatmap",
-                colorscale: "Portland",
+                colorscale: "YlGnBu",
                 colorbar: {
                     title: "x"
                 },
-                zmin: 0.5,
-                zmax: 1.4
+                //zmin: 0.5,
+                //zmax: 1.4
             }
           ];
     
         var layout = {
             uirevision:'true',
-            xaxis: {title: "x"}, 
+            xaxis: {title: "time"}, 
             yaxis: {title: "y"},
             //zmin: 0,
+            margin: {
+                t: 10,
+                b: 40,
+                l: 60,
+                r: 30,
+              }
         };
     
         Plotly.react("xVarHeatmap", data, layout, config);
@@ -208,67 +244,33 @@ function drawPlots(mat1, mat2){
 }
 
 
-
-// Initialize matrix
-var xl = 200
-var yl = 5
-var meanFrequency = 10
-var rangeFrequency = 0.5
-
-var phasesMatrix = math.multiply(math.random([xl, yl]), 0.2*2*Math.PI)
-var xMatrix = math.add(math.ones([xl, yl]), 0.)
-var stableFrequencies = math.add(
-    math.ones([xl, yl]), 
-    math.map(
-        math.random([xl, yl]),
-        function(x){
-            return boxMuller(x, 0.5, 0)
-        }
-    )
-)
-
-// initialize phase gradient
-var maxFreq = 1.2
-var minFreq = 0.8
-var frequencyGradient = Array(xl).fill(1).map((i, j) => j/(xl-1)*(minFreq - maxFreq) + maxFreq)
-var stableFrequencies = [frequencyGradient]
-
-
-
-for (let i = 1; i < yl; i++) {
-    stableFrequencies = math.concat(stableFrequencies, [frequencyGradient], 0)
-}
-
-stableFrequencies = math.transpose(stableFrequencies)
-stableFrequencies = math.add(
-    stableFrequencies, 
-    math.map(
-        math.random([xl, yl]),
-        function(x){
-            return boxMuller(x, 0.1, 0)
-        }
-    )
-)
+// Parameters
+var maxFreq = 1.5               // Maximum frequency of the frequency gradient
+var minFreq = 0.7               // Minimum frequency of the frequency gradient
+var couplingStrength = 1.4      // Coupling strength between neighboring sites
+var xl = 100                    // size in x
+var yl = 5                      // size in y
+var rangeFrequency = 0.0        // Standard deviation
+var rangePhases = 0.3           // range of phases randomly selected in the initial conditions
+var noiseAmount = 2           // amount of noise in simulation
+var cParam = 25                  // c parameter in the coupling function
+var alphaParam = 1.             // alpha parameter for the memory variable
+selectCouplingFunction("sine")  // select initial coupling function
+var pulseStrength = 1.6           // coupling strenght of the pulses
+var pulseFrequency = 10  // Frequency of the perturbation
 
 
 
 
-
-var couplingStrength = 1
+// Meta parameters
 var waitingTime = 1
-var loop_on = true
+var loop_on = false
 var loopPause = false
-var rangePhases = 0.3
-var noiseAmount = 0.0
-var cParam = 8
-var dt = 0.01
-var alphaParam = 1.
-selectCouplingFunction("sine")
+var dt = 0.01    
+var currentTime = 0.0              
 
 
-var kymoGraph = [math.transpose(phasesMatrix)[2]]
 
-//console.log(kymoGraph)
 
 
 
@@ -276,13 +278,50 @@ var kymoGraph = [math.transpose(phasesMatrix)[2]]
 
 async function main(){
 
-    //console.log(phases)
-
     // Overall loop to make the whole app run
     while (true) {
 
-        
+        // If paused, stuck in this
+        while (loopPause) {
+            await sleep(10)
+        }
 
+        // Only re-initialize everything if a reset is detected
+        if (loop_on == false) {
+            // Initialize phase matrix
+            var phasesMatrix = math.multiply(math.random([xl, yl]), rangePhases*2*Math.PI)
+
+            // Initialize x matrix
+            var xMatrix = math.add(math.ones([xl, yl]), 0.)
+
+            // Initialize phase gradient
+            var frequencyGradient = Array(xl).fill(1).map((i, j) => j/(xl-1)*(minFreq - maxFreq) + maxFreq)
+            var stableFrequencies = [frequencyGradient]
+
+            //console.log(stableFrequencies)
+            
+            for (let i = 1; i < yl; i++) {
+                stableFrequencies = math.concat(stableFrequencies, [frequencyGradient], 0)
+            }
+            stableFrequencies = math.transpose(stableFrequencies)
+            stableFrequencies = math.add(   // add some initial noise
+                stableFrequencies, 
+                math.map(
+                    math.random([xl, yl]),
+                    function(x){
+                        return boxMuller(x, rangeFrequency, 0)
+                    }
+                )
+            )
+
+            // Initializing kymo graphs
+            var kymoGraph = [math.transpose(phasesMatrix)[2]]
+            var kymoFrequency = [math.transpose(xMatrix)[2]]
+        }
+
+        await sleep(waitingTime) 
+    
+        loop_on = true
 
         // Smaller loop to run the simulation
         while (loop_on && !(loopPause)) {
@@ -291,34 +330,27 @@ async function main(){
             
             // Plotting the main simulation
             await sleep(waitingTime) 
-            
-            
+            currentTime += dt
+            drawPlots(math.transpose(kymoGraph), math.transpose(kymoFrequency))
 
-            //var config = {responsive: true}
-            //Plotly.react("mainSim", data, layout, config);
+            // Time evolve the system
+            dphi = dphidt(phasesMatrix, xMatrix, stableFrequencies, currentTime)    // derivative of phi
+            phasesMatrix = math.add(
+                phasesMatrix, 
+                math.multiply(
+                    math.add(
+                        math.multiply(math.add(math.random([xl, yl]), -0.5), 2*noiseAmount),
+                        dphi
+                    ), 
+                    dt
+                )
+            )  // update the phase array
 
-            //drawPlots(phasesMatrix, xMatrix)
-            drawPlots(math.transpose(kymoGraph), xMatrix)
+            xMatrix = math.add(xMatrix, math.multiply(dxdt(dphi, xMatrix), dt)) // update the x (memory) array
 
-    
-
-            //console.log("phasesMatrix is:", phasesMatrix)
-            dphi = dphidt(phasesMatrix, xMatrix)
-            //console.log(dphi)
-            phasesMatrix = math.add(phasesMatrix, math.multiply(dphi, dt))
-            xMatrix = math.add(xMatrix, math.multiply(dxdt(dphi, xMatrix), dt))
-
+            // Append a cross section of the phase array to make kymo graph
             kymoGraph = math.concat(kymoGraph, [math.transpose(phasesMatrix)[2]], 0)
-            //console.log(kymoGraph)
-
-
-            
-
-            
-              
-
-
-
+            kymoFrequency = math.concat(kymoFrequency, [math.transpose(xMatrix)[2]], 0)
         }
     }
 }

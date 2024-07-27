@@ -36,99 +36,189 @@
     <section>
       <h1>Kymographs</h1>
 
-      On this page, I present some interactive kymographs for the entrainment of
-      the mouse PSM tailbud.
+      On this page are some interactive kymographs for the entrainment of the
+      mouse PSM tailbud. Here the simulations are for a 2D array of cells that
+      each have an internal memory of their frequency. They are coupled to each
+      other via selctable couplings with, also selectable strength. The 2D array
+      is simulated and a cross-section is appended in real time to the
+      kymograph. The parameters are
+      <ul>
+        <li>
+          alpha: The alpha parameter for the decay of the memory variable as
+          presented in the model
+          <a href="https://cmdenis.com/2024-frequency-memory-website/">here</a>.
+        </li>
+        <li>c: Also a parameter of the model with memory</li>
+        <li>k: The coupling strength between neighbors</li>
+        <li>
+          max freq.: The maximum frequency in the vertical frequency gradient
+        </li>
+        <li>
+          min freq.: The minimum frequency in the vertical frequency gradient
+        </li>
+        <li>phase range: The spread out of initial phases</li>
+        <li>
+          sigma: The amount of variations in the stable intrinsic frequency of
+          the system
+        </li>
+        <li>
+          noise: The amount of noise added in the system at each time step
+        </li>
+      </ul>
     </section>
-    <!-- <section>
+    <section>
       <div>
-        <div>
-          <input
-            type="range"
-            min="0.0"
-            value="2"
-            max="10"
-            class="slider"
-            oninput="this.nextElementSibling.value = 'k = ' +this.value; couplingStrength = this.value"
-            step="0.1" />
-          <output>k = 2</output>
-        </div>
+        <div class="allParameterBoxes">
+          <div class="parameterBox">
+            <b>Parameters for each individual oscillators:</b>
+            <div>
+              <!-- alpha -->
+              <input
+                type="range"
+                min="0.0"
+                value="1.0"
+                max="10"
+                class="slider"
+                oninput="this.nextElementSibling.value = 'alpha = ' +this.value; alphaParam = this.value"
+                step="0.05" />
+              <output>alpha = 1.0</output>
 
-        <div>
-          <input
-            type="range"
-            min="0.0"
-            value="10"
-            max="15"
-            class="slider"
-            id="sliderMeanFrequency"
-            oninput="
-              this.nextElementSibling.value = 'E(ω) = ' + this.value; 
-              meanFrequency = this.value
-              "
-            step="0.1" />
-          <output> E(ω) = 10</output>
-        </div>
+              <div>
+                <!-- c -->
+                <input
+                  type="range"
+                  min="0.01"
+                  value="25"
+                  max="30"
+                  class="slider"
+                  oninput="this.nextElementSibling.value = 'c = ' +this.value; cParam = this.value"
+                  step="0.05" />
+                <output>c = 25</output>
+              </div>
+            </div>
+          </div>
 
-        <div>
-          <input
-            type="range"
-            min="0.0"
-            value="0.5"
-            max="5"
-            class="slider"
-            id="sliderRangeFrequency"
-            oninput="this.nextElementSibling.value = 'σ =  ' +this.value; rangeFrequency = this.value"
-            step="0.01" />
-          <output> σ = 0.5</output>
-        </div>
-        <div>
-          <input
-            type="range"
-            min="0.0"
-            value="0.0"
-            max="80"
-            class="slider"
-            oninput="this.nextElementSibling.value = 'Noise =  ' + this.value; noiseAmount = this.value"
-            step="0.01" />
-          <output> Noise = 0.00</output>
-        </div>
+          <div class="parameterBox">
+            <b>Parameters for the network:</b>
+            <div>
+              <!-- Nearest neighbor coupling -->
+              <input
+                type="range"
+                min="0.0"
+                value="1.4"
+                max="10"
+                class="slider"
+                oninput="this.nextElementSibling.value = 'k = ' +this.value; couplingStrength = this.value"
+                step="0.1" />
+              <output>k = 1.4</output>
+            </div>
+            <div>
+              <!-- Maximum frequency of gradient -->
+              <input
+                type="range"
+                min="0.0"
+                value="1.5"
+                max="10"
+                class="slider"
+                oninput="this.nextElementSibling.value = 'max frequency = ' + this.value; maxFreq = Number(this.value)"
+                step="0.01" />
+              <output>max frequency = 1.5</output>
+            </div>
+            <div>
+              <!-- Minimum of frequency gradient -->
+              <input
+                type="range"
+                min="0.0"
+                value="0.7"
+                max="0.9"
+                class="slider"
+                oninput="this.nextElementSibling.value = 'min frequency = ' + this.value; minFreq = this.value"
+                step="0.1" />
+              <output>min frequency = 0.7</output>
+            </div>
 
-        <div>
-          <input
-            type="range"
-            min="0.0"
-            value="0.3"
-            max="1"
-            class="slider"
-            oninput="this.nextElementSibling.value = 'Phases range =  ' + this.value; rangePhases = this.value"
-            step="0.01" />
-          <output> Phases range = 0.30</output>
-        </div>
+            <div>
+              <!-- Initial phase range -->
+              <input
+                type="range"
+                min="0.0"
+                value="0.3"
+                max="1"
+                class="slider"
+                oninput="this.nextElementSibling.value = 'phase range = ' + this.value;  rangePhases = this.value"
+                step="0.01" />
+              <output>phase range = 0.3</output>
+            </div>
 
-        <div>
-          <input
-            type="range"
-            min="50"
-            value="50"
-            max="200"
-            class="slider"
-            id="sliderSizeX"
-            oninput="this.nextElementSibling.value = 'size: ' +this.value; xl = this.value; yl = this.value"
-            step="5" />
-          <output>size = 50</output>
-        </div>
+            <div>
+              <!-- Standard deviation of the noise in the intrinsic frequencies -->
+              <input
+                type="range"
+                min="0.0"
+                value="0.0"
+                max="5"
+                class="slider"
+                id="sliderRangeFrequency"
+                oninput="this.nextElementSibling.value = 'σ =  ' +this.value; rangeFrequency = this.value"
+                step="0.01" />
+              <output> σ = 0.0</output>
+            </div>
 
-        <div style="padding-bottom: 10px; padding-top: 5px">
-          <select
-            id="model-selector"
-            onchange="selectCouplingFunction(this.value)">
-            <option value="rectified">
-              Coupling function: max(0, sin(ΔΦ))
-            </option>
-            <option value="sine">Coupling function: sin(ΔΦ)</option>
-            <option value="cosine">Coupling function: cos(ΔΦ)</option>
-            <option value="1">Coupling function: 1</option>
-          </select>
+            <div>
+              <!-- Noise -->
+              <input
+                type="range"
+                min="0.0"
+                value="2"
+                max="50"
+                class="slider"
+                oninput="this.nextElementSibling.value = 'Noise =  ' + this.value; noiseAmount = this.value"
+                step="0.01" />
+              <output> Noise = 2</output>
+            </div>
+
+            <div style="padding-bottom: 10px; padding-top: 5px">
+              <select
+                id="model-selector"
+                onchange="selectCouplingFunction(this.value)">
+                <option value="sine">Coupling function: sin(ΔΦ)</option>
+                <option value="rectified">
+                  Coupling function: max(0, sin(ΔΦ))
+                </option>
+                <option value="cosine">Coupling function: cos(ΔΦ)</option>
+                <option value="1">Coupling function: 1</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="parameterBox">
+            <b>Parameters for entrainment:</b>
+            <div>
+              <!-- Entrainment coupling strength -->
+              <input
+                type="range"
+                min="0.0"
+                value="1.6"
+                max="10"
+                class="slider"
+                oninput="this.nextElementSibling.value = 'A = ' + this.value;  pulseStrength = this.value"
+                step="0.1" />
+              <output>A = 1.6</output>
+            </div>
+
+            <div>
+              <!-- Entrainment frequency -->
+              <input
+                type="range"
+                min="0.0"
+                value="10"
+                max="10"
+                class="slider"
+                oninput="this.nextElementSibling.value = 'omega = ' + this.value;  pulseFrequency = this.value"
+                step="0.1" />
+              <output>omega = 10</output>
+            </div>
+          </div>
         </div>
 
         <button type="button" id="resetButtonID" onclick="loop_on = false">
@@ -152,7 +242,7 @@
           Pause
         </button>
       </div>
-    </section> -->
+    </section>
 
     <div class="heatmapsPlots">
       <div id="kymoHeatmap">
